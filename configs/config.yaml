@@ -16,7 +16,7 @@ database:
   loc: "Local"
 
 jwt:
-  secret: "your-secret-key-here"
+  secret: "$2a$12$IDZNQL7K/7DCS5XaRNlnjeJK4RhRuDvHkHll.Lmyi8HGBnC4GClPS"
   expires_in: 24 # hours
 
 redis:
