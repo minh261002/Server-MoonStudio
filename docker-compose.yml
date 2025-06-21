@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_MODE=debug
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=password
+      - DB_NAME=moon_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./configs:/app/configs
+    networks:
+      - moon-network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: moon_db
+      MYSQL_USER: moon_user
+      MYSQL_PASSWORD: moon_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - moon-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - moon-network
+
+  # Optional: Add phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - moon-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  moon-network:
+    driver: bridge 
