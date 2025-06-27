@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -37,6 +38,11 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type LoginResponse struct {
+	Token string       `json:"token"`
+	User  UserResponse `json:"user"`
+}
+
 type UserResponse struct {
 	ID        uint      `json:"id"`
 	Email     string    `json:"email"`
@@ -46,4 +52,13 @@ type UserResponse struct {
 	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// Repository interface - Domain layer
+type Repository interface {
+	Create(ctx context.Context, user *User) error
+	GetByID(ctx context.Context, id uint) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, user *User) error
+	Delete(ctx context.Context, id uint) error
 }

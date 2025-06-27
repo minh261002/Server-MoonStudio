@@ -9,6 +9,11 @@ import (
 
 	"moon/internal/config"
 	"moon/internal/database"
+	"moon/internal/domain/user"
+	httpHandler "moon/internal/handler/http"
+	"moon/internal/middleware"
+	"moon/internal/repository"
+	"moon/internal/usecase"
 	"moon/pkg/logger"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +45,13 @@ func main() {
 	}
 	log.Info("Connected to database successfully")
 
+	// Auto migrate
+	db := database.GetDB()
+	if err := db.AutoMigrate(&user.User{}); err != nil {
+		log.Fatal("Failed to migrate database", zap.Error(err))
+	}
+	log.Info("Database migration completed")
+
 	// Setup router
 	r := setupRouter()
 
@@ -68,6 +80,18 @@ func main() {
 }
 
 func setupRouter() *gin.Engine {
+	cfg := config.GetConfig()
+	db := database.GetDB()
+
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(db)
+
+	// Initialize use cases
+	authUseCase := usecase.NewAuthUseCase(userRepo, cfg)
+
+	// Initialize handlers
+	authHandler := httpHandler.NewAuthHandler(authUseCase)
+
 	r := gin.Default()
 
 	// Health check
@@ -89,17 +113,33 @@ func setupRouter() *gin.Engine {
 			})
 		})
 
-		// TODO: Add more routes here
-		// api.POST("/auth/register", authHandler.Register)
-		// api.POST("/auth/login", authHandler.Login)
-		//
-		// // Protected routes
-		// protected := api.Group("/")
-		// protected.Use(middleware.AuthMiddleware())
-		// {
-		//     protected.GET("/users/profile", userHandler.GetProfile)
-		//     protected.PUT("/users/profile", userHandler.UpdateProfile)
-		// }
+		// Auth routes
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/logout", authHandler.Logout)
+			auth.POST("/refresh", authHandler.RefreshToken)
+		}
+
+		// Protected routes
+		protected := api.Group("/")
+		protected.Use(middleware.AuthMiddleware())
+		{
+			// User profile routes
+			protected.GET("/profile", func(c *gin.Context) {
+				userID, _ := c.Get("user_id")
+				email, _ := c.Get("email")
+				role, _ := c.Get("role")
+
+				c.JSON(http.StatusOK, gin.H{
+					"user_id": userID,
+					"email":   email,
+					"role":    role,
+				})
+			})
+			// TODO: Add more protected routes here
+		}
 	}
 
 	return r
