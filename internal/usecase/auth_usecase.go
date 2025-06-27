@@ -43,12 +43,15 @@ func (uc *authUseCase) Register(ctx context.Context, req user.CreateUserRequest)
 
 	// Create user
 	newUser := &user.User{
-		Email:     req.Email,
-		Password:  hashedPassword,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Role:      "user",
-		IsActive:  true,
+		Email:    req.Email,
+		Password: hashedPassword,
+		Name:     req.Name,
+		Phone:    nil,
+		Address:  nil,
+		Lat:      nil,
+		Lng:      nil,
+		Role:     "user",
+		IsActive: true,
 	}
 
 	if err := uc.userRepo.Create(ctx, newUser); err != nil {
@@ -59,8 +62,11 @@ func (uc *authUseCase) Register(ctx context.Context, req user.CreateUserRequest)
 	response := &user.UserResponse{
 		ID:        newUser.ID,
 		Email:     newUser.Email,
-		FirstName: newUser.FirstName,
-		LastName:  newUser.LastName,
+		Name:      newUser.Name,
+		Phone:     *newUser.Phone,
+		Address:   *newUser.Address,
+		Lat:       *newUser.Lat,
+		Lng:       *newUser.Lng,
 		Role:      newUser.Role,
 		IsActive:  newUser.IsActive,
 		CreatedAt: newUser.CreatedAt,
@@ -97,8 +103,11 @@ func (uc *authUseCase) Login(ctx context.Context, req user.LoginRequest) (*user.
 	userResponse := user.UserResponse{
 		ID:        u.ID,
 		Email:     u.Email,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
+		Name:      u.Name,
+		Phone:     *u.Phone,
+		Address:   *u.Address,
+		Lat:       *u.Lat,
+		Lng:       *u.Lng,
 		Role:      u.Role,
 		IsActive:  u.IsActive,
 		CreatedAt: u.CreatedAt,

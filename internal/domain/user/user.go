@@ -11,8 +11,11 @@ type User struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	Email     string         `json:"email" gorm:"uniqueIndex;not null"`
 	Password  string         `json:"-" gorm:"not null"`
-	FirstName string         `json:"first_name" gorm:"not null"`
-	LastName  string         `json:"last_name" gorm:"not null"`
+	Name      string         `json:"name" gorm:"not null"`
+	Phone     *string        `json:"phone" gorm:"not null"`
+	Address   *string        `json:"address" gorm:"not null"`
+	Lat       *float64       `json:"lat" gorm:"not null"`
+	Lng       *float64       `json:"lng" gorm:"not null"`
 	Role      string         `json:"role" gorm:"default:'user'"`
 	IsActive  bool           `json:"is_active" gorm:"default:true"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -21,16 +24,19 @@ type User struct {
 }
 
 type CreateUserRequest struct {
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=6"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+	Name     string `json:"name" binding:"required"`
 }
 
 type UpdateUserRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	IsActive  *bool  `json:"is_active"`
+	Name     string  `json:"name"`
+	Phone    string  `json:"phone"`
+	Address  string  `json:"address"`
+	Lat      float64 `json:"lat"`
+	Lng      float64 `json:"lng"`
+	IsActive *bool   `json:"is_active"`
+	Role     string  `json:"role"`
 }
 
 type LoginRequest struct {
@@ -46,8 +52,11 @@ type LoginResponse struct {
 type UserResponse struct {
 	ID        uint      `json:"id"`
 	Email     string    `json:"email"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
+	Name      string    `json:"name"`
+	Phone     string    `json:"phone"`
+	Address   string    `json:"address"`
+	Lat       float64   `json:"lat"`
+	Lng       float64   `json:"lng"`
 	Role      string    `json:"role"`
 	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
