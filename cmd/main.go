@@ -9,6 +9,7 @@ import (
 
 	"moon/internal/config"
 	"moon/internal/database"
+	"moon/internal/domain/post"
 	"moon/internal/domain/user"
 	httpHandler "moon/internal/handler/http"
 	"moon/internal/middleware"
@@ -47,7 +48,7 @@ func main() {
 
 	// Auto migrate
 	db := database.GetDB()
-	if err := db.AutoMigrate(&user.User{}); err != nil {
+	if err := db.AutoMigrate(&user.User{}, &post.Post{}); err != nil {
 		log.Fatal("Failed to migrate database", zap.Error(err))
 	}
 	log.Info("Database migration completed")
@@ -85,14 +86,17 @@ func setupRouter() *gin.Engine {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	postRepo := repository.NewPostRepository(db)
 
 	// Initialize use cases
 	authUseCase := usecase.NewAuthUseCase(userRepo, cfg)
 	userUseCase := usecase.NewUserUseCase(userRepo)
+	postUseCase := usecase.NewPostUseCase(postRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := httpHandler.NewAuthHandler(authUseCase)
 	userHandler := httpHandler.NewUserHandler(userUseCase)
+	postHandler := httpHandler.NewPostHandler(postUseCase)
 
 	r := gin.Default()
 
@@ -115,6 +119,10 @@ func setupRouter() *gin.Engine {
 			})
 		})
 
+		// Public post routes
+		api.GET("/posts/published", postHandler.GetPublishedPosts)
+		api.GET("/posts/slug/:slug", postHandler.GetPostBySlug)
+
 		// Auth routes
 		auth := api.Group("/auth")
 		{
@@ -130,6 +138,16 @@ func setupRouter() *gin.Engine {
 		{
 			// User profile routes
 			protected.GET("/profile", userHandler.GetProfile)
+
+			// Post routes (authenticated users)
+			protected.POST("/posts", postHandler.CreatePost)
+			protected.GET("/posts/:id", postHandler.GetPostByID)
+			protected.PUT("/posts/:id", postHandler.UpdatePost)
+			protected.DELETE("/posts/:id", postHandler.DeletePost)
+			protected.GET("/posts", postHandler.GetAllPosts)
+			protected.GET("/posts/my", postHandler.GetMyPosts)
+			protected.PATCH("/posts/:id/publish", postHandler.PublishPost)
+			protected.PATCH("/posts/:id/unpublish", postHandler.UnpublishPost)
 		}
 
 		// Admin routes
@@ -143,6 +161,9 @@ func setupRouter() *gin.Engine {
 			admin.PUT("/users/:id", userHandler.UpdateUser)
 			admin.DELETE("/users/:id", userHandler.DeleteUser)
 			admin.GET("/users/role/:role", userHandler.GetUsersByRole)
+
+			// Admin post management (all posts)
+			admin.GET("/posts", postHandler.GetAllPosts)
 		}
 	}
 
