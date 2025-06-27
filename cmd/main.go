@@ -88,9 +88,11 @@ func setupRouter() *gin.Engine {
 
 	// Initialize use cases
 	authUseCase := usecase.NewAuthUseCase(userRepo, cfg)
+	userUseCase := usecase.NewUserUseCase(userRepo)
 
 	// Initialize handlers
 	authHandler := httpHandler.NewAuthHandler(authUseCase)
+	userHandler := httpHandler.NewUserHandler(userUseCase)
 
 	r := gin.Default()
 
@@ -127,18 +129,20 @@ func setupRouter() *gin.Engine {
 		protected.Use(middleware.AuthMiddleware())
 		{
 			// User profile routes
-			protected.GET("/profile", func(c *gin.Context) {
-				userID, _ := c.Get("user_id")
-				email, _ := c.Get("email")
-				role, _ := c.Get("role")
+			protected.GET("/profile", userHandler.GetProfile)
+		}
 
-				c.JSON(http.StatusOK, gin.H{
-					"user_id": userID,
-					"email":   email,
-					"role":    role,
-				})
-			})
-			// TODO: Add more protected routes here
+		// Admin routes
+		admin := api.Group("/admin")
+		admin.Use(middleware.AuthMiddleware())
+		admin.Use(middleware.RoleMiddleware("admin"))
+		{
+			// User management
+			admin.GET("/users", userHandler.GetAllUsers)
+			admin.GET("/users/:id", userHandler.GetUserByID)
+			admin.PUT("/users/:id", userHandler.UpdateUser)
+			admin.DELETE("/users/:id", userHandler.DeleteUser)
+			admin.GET("/users/role/:role", userHandler.GetUsersByRole)
 		}
 	}
 

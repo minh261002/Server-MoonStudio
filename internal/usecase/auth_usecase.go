@@ -63,10 +63,10 @@ func (uc *authUseCase) Register(ctx context.Context, req user.CreateUserRequest)
 		ID:        newUser.ID,
 		Email:     newUser.Email,
 		Name:      newUser.Name,
-		Phone:     *newUser.Phone,
-		Address:   *newUser.Address,
-		Lat:       *newUser.Lat,
-		Lng:       *newUser.Lng,
+		Phone:     getStringValue(newUser.Phone),
+		Address:   getStringValue(newUser.Address),
+		Lat:       getFloat64Value(newUser.Lat),
+		Lng:       getFloat64Value(newUser.Lng),
 		Role:      newUser.Role,
 		IsActive:  newUser.IsActive,
 		CreatedAt: newUser.CreatedAt,
@@ -104,10 +104,10 @@ func (uc *authUseCase) Login(ctx context.Context, req user.LoginRequest) (*user.
 		ID:        u.ID,
 		Email:     u.Email,
 		Name:      u.Name,
-		Phone:     *u.Phone,
-		Address:   *u.Address,
-		Lat:       *u.Lat,
-		Lng:       *u.Lng,
+		Phone:     getStringValue(u.Phone),
+		Address:   getStringValue(u.Address),
+		Lat:       getFloat64Value(u.Lat),
+		Lng:       getFloat64Value(u.Lng),
 		Role:      u.Role,
 		IsActive:  u.IsActive,
 		CreatedAt: u.CreatedAt,
@@ -119,4 +119,19 @@ func (uc *authUseCase) Login(ctx context.Context, req user.LoginRequest) (*user.
 		Token: token,
 		User:  userResponse,
 	}, nil
+}
+
+// Helper functions to handle pointer values
+func getStringValue(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
+}
+
+func getFloat64Value(ptr *float64) float64 {
+	if ptr == nil {
+		return 0.0
+	}
+	return *ptr
 }

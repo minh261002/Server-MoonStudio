@@ -55,3 +55,30 @@ func (r *userRepository) Update(ctx context.Context, u *user.User) error {
 func (r *userRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&user.User{}, id).Error
 }
+
+func (r *userRepository) GetAll(ctx context.Context, limit, offset int) ([]*user.User, error) {
+	var users []*user.User
+	err := r.db.WithContext(ctx).
+		Limit(limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Find(&users).Error
+	return users, err
+}
+
+func (r *userRepository) GetTotalCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&user.User{}).Count(&count).Error
+	return count, err
+}
+
+func (r *userRepository) GetByRole(ctx context.Context, role string, limit, offset int) ([]*user.User, error) {
+	var users []*user.User
+	err := r.db.WithContext(ctx).
+		Where("role = ?", role).
+		Limit(limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Find(&users).Error
+	return users, err
+}

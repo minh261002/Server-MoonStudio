@@ -27,10 +27,22 @@ deps:
 	go mod tidy
 	go mod download
 
-# Run database migrations (placeholder)
+# Run database migrations
 migrate:
 	@echo "Running database migrations..."
-	# TODO: Add migration commands here
+	mysql -u root -p moon_db < migrations/001_create_users_table.sql
+
+# Create admin user
+create-admin:
+	@echo "Creating admin user..."
+	cd scripts && go run create_admin.go
+
+# Setup database
+db-setup:
+	@echo "Setting up database..."
+	mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS moon_db;"
+	$(MAKE) migrate
+	$(MAKE) create-admin
 
 # Run linter
 lint:

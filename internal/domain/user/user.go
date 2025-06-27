@@ -63,6 +63,24 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UsersListResponse struct {
+	Users      []UserResponse `json:"users"`
+	Total      int64          `json:"total"`
+	Page       int            `json:"page"`
+	Limit      int            `json:"limit"`
+	TotalPages int            `json:"total_pages"`
+}
+
+type AdminUpdateUserRequest struct {
+	Name     *string  `json:"name"`
+	Phone    *string  `json:"phone"`
+	Address  *string  `json:"address"`
+	Lat      *float64 `json:"lat"`
+	Lng      *float64 `json:"lng"`
+	IsActive *bool    `json:"is_active"`
+	Role     *string  `json:"role" binding:"omitempty,oneof=user admin"`
+}
+
 // Repository interface - Domain layer
 type Repository interface {
 	Create(ctx context.Context, user *User) error
@@ -70,4 +88,7 @@ type Repository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id uint) error
+	GetAll(ctx context.Context, limit, offset int) ([]*User, error)
+	GetTotalCount(ctx context.Context) (int64, error)
+	GetByRole(ctx context.Context, role string, limit, offset int) ([]*User, error)
 }
